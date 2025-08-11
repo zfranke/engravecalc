@@ -5,26 +5,36 @@ import StickyOutputCard from './components/StickyOutputCard';
 import EstimatorPanel from './features/estimator/EstimatorPanel';
 import MaterialsDialog from './features/materials/MaterialsDialog';
 import PresetsDialog from './features/presets/PresetsDialog';
+import FilePreview from './components/FilePreview';
 import calc from './features/estimator/calculate';
+import { storage } from './lib/storage';
 
 export default function App() {
-  // shared state (single page)
   const [form, setForm] = useState({
+    // Machine
     machine: 'xTool S1 40W',
-    module: 'IR 2W',
-    material: 'Basswood',
+    module: 'Blue 40W',
     w: 200,
     h: 150,
     speed: 300,
     dpi: 300,
+
+    // Material
+    material: 'Basswood',
+    materialUnitType: 'Sheet',
+    materialUnitCost: 2.5,
+    materialQty: 1,
+
+    // Power/Profit
     power: 80,
-    sheetCost: 2.5,
-    electric: 0.14,
+    electricCents: 13.5, // ¢/kWh
     margin: 50,
+    wearTear: 0.25,      // NEW: surfaced in UI
   });
 
   const [materialsOpen, setMaterialsOpen] = useState(false);
   const [presetsOpen, setPresetsOpen] = useState(false);
+  const [minProfit, setMinProfit] = useState(() => storage.get('minProfit', 0));
 
   const est = useMemo(() => calc(form), [form]);
 
@@ -35,15 +45,40 @@ export default function App() {
         onOpenPresets={() => setPresetsOpen(true)}
       />
 
+      {/* Center everything with a max width */}
       <Box sx={{ p: 2 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={8} lg={9}>
-            <EstimatorPanel value={form} onChange={setForm} />
+        <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
+          {/* Inputs across the top (full width) */}
+          <EstimatorPanel
+            value={form}
+            onChange={setForm}
+            minProfit={minProfit}
+            onMinProfitChange={(v) => {
+              const val = Math.max(0, Number.isFinite(v) ? v : 0);
+              setMinProfit(val);
+              storage.set('minProfit', val);
+            }}
+          />
+
+          {/* Preview + Output under inputs, centered */}
+          <Grid
+            container
+            spacing={2}
+            sx={{ mt: 2 }}
+            justifyContent="center"
+            alignItems="flex-start"
+          >
+            <Grid item xs={12} md={7}>
+              <FilePreview
+                dpi={form.dpi}
+                onDimensions={({ w, h }) => setForm((f) => ({ ...f, w, h }))}
+              />
+            </Grid>
+            <Grid item xs={12} md={5}>
+              <StickyOutputCard est={est} threshold={minProfit} />
+            </Grid>
           </Grid>
-          <Grid item xs={12} md={4} lg={3}>
-            <StickyOutputCard est={est} />
-          </Grid>
-        </Grid>
+        </Box>
       </Box>
 
       <MaterialsDialog open={materialsOpen} onClose={() => setMaterialsOpen(false)} />
@@ -51,4 +86,3 @@ export default function App() {
     </Box>
   );
 }
-
