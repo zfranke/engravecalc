@@ -14,6 +14,8 @@ import {
   Typography,
   Tooltip,
   IconButton,
+  FormControlLabel,
+  Switch,
 } from '@mui/material';
 import InfoOutlined from '@mui/icons-material/InfoOutlined';
 
@@ -32,49 +34,81 @@ export default function EstimatorPanel({
 
   return (
     <Card>
-      <CardHeader title="Job Parameters" />
-      <CardContent>
-        {/* MACHINE DETAILS */}
-        <SectionTitle>Machine Details</SectionTitle>
-        <Grid container rowSpacing={2} columnSpacing={2} sx={{ mb: 1 }}>
-          <Grid item xs={12} md={3}>
-            <TextField size="small" select label="Machine" fullWidth value={value.machine}
-              onChange={(e)=>set({machine:e.target.value})}>
-              {MACHINES.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField size="small" select label="Module" fullWidth value={value.module}
-              onChange={(e)=>set({module:e.target.value})}>
-              {MODULES.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
-            </TextField>
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <TextField size="small" type="number" label="DPI" fullWidth value={value.dpi}
-              onChange={(e)=>set({dpi:+e.target.value})}/>
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <TextField size="small" type="number" label="Width" fullWidth
-              InputProps={{ endAdornment: <InputAdornment position="end">mm</InputAdornment> }}
-              value={value.w} onChange={(e)=>set({w:+e.target.value})}/>
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <TextField size="small" type="number" label="Height" fullWidth
-              InputProps={{ endAdornment: <InputAdornment position="end">mm</InputAdornment> }}
-              value={value.h} onChange={(e)=>set({h:+e.target.value})}/>
-          </Grid>
-          <Grid item xs={12} md={3}>
-            <TextField size="small" type="number" label="Speed" fullWidth
-              InputProps={{ endAdornment: <InputAdornment position="end">mm/s</InputAdornment> }}
-              value={value.speed} onChange={(e)=>set({speed:+e.target.value})}/>
-          </Grid>
-          <Grid item xs={6} md={3} sx={{ display: 'flex', justifyContent: { xs:'flex-start', md:'flex-end' }, alignItems: 'center' }}>
-            <Button variant="outlined">Import SVG/XCS</Button>
-          </Grid>
-          <Grid item xs={12} md={3} />
-        </Grid>
+  <CardHeader title="Job Parameters" />
+  <CardContent>
+    {/* MACHINE DETAILS */}
+    <SectionTitle>Machine Details</SectionTitle>
+    <Grid container rowSpacing={2} columnSpacing={2} sx={{ mb: 1 }}>
+      {/* Row 1 */}
+      <Grid item xs={12} md={3}>
+        <TextField size="small" select label="Machine" fullWidth value={value.machine}
+          onChange={(e)=>set({machine:e.target.value})}>
+          {MACHINES.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+        </TextField>
+      </Grid>
+      <Grid item xs={12} md={3}>
+        <TextField size="small" select label="Module" fullWidth value={value.module}
+          onChange={(e)=>set({module:e.target.value})}>
+          {MODULES.map(v => <MenuItem key={v} value={v}>{v}</MenuItem>)}
+        </TextField>
+      </Grid>
+      <Grid item xs={6} md={2}>
+        <TextField size="small" type="number" label="DPI" fullWidth value={value.dpi}
+          onChange={(e)=>set({dpi:+e.target.value || 0})}/>
+      </Grid>
+      <Grid item xs={6} md={2}>
+        {/* Speed on first row */}
+        <TextField
+          size="small"
+          type="number"
+          label="Speed"
+          fullWidth
+          InputProps={{ endAdornment: <InputAdornment position="end">mm/s</InputAdornment> }}
+          value={value.speed}
+          onChange={(e)=>set({speed:+e.target.value || 0})}
+        />
+      </Grid>
 
-        <Divider sx={{ my: 1.5 }} />
+      {/* Row 2 */}
+      <Grid item xs={12} md={4}>
+        {/* Width & Height grouped */}
+        <Stack direction="row" spacing={2}>
+          <TextField
+            size="small"
+            type="number"
+            label="Width"
+            fullWidth
+            InputProps={{ endAdornment: <InputAdornment position="end">mm</InputAdornment> }}
+            value={value.w}
+            onChange={(e)=>set({w:+e.target.value || 0})}
+          />
+          <TextField
+            size="small"
+            type="number"
+            label="Height"
+            fullWidth
+            InputProps={{ endAdornment: <InputAdornment position="end">mm</InputAdornment> }}
+            value={value.h}
+            onChange={(e)=>set({h:+e.target.value || 0})}
+          />
+        </Stack>
+      </Grid>
+
+      <Grid item xs={12} md={2}>
+        {/* Copies narrower / its own cell */}
+        <TextField
+          size="small"
+          type="number"
+          label="Copies (in one run)"
+          fullWidth
+          value={value.copies}
+          onChange={(e)=>set({copies: Math.max(1, +e.target.value || 1)})}
+          helperText="Time & energy scale with copies"
+        />
+      </Grid>
+    </Grid>
+
+    <Divider sx={{ my: 1.5 }} />
 
         {/* MATERIAL DETAILS */}
         <SectionTitle>Material Details</SectionTitle>
@@ -111,7 +145,8 @@ export default function EstimatorPanel({
             <SliderField label="Power (%)" value={value.power} onChange={(v)=>set({power:v})} />
           </Grid>
           <Grid item xs={12} md={3}>
-            <SliderField label="Profit Margin (%)" value={value.margin} onChange={(v)=>set({margin:v})} />
+            {/* MAX 300% */}
+            <SliderField label="Profit Margin (%)" value={value.margin} onChange={(v)=>set({margin:v})} max={300} />
           </Grid>
           <Grid item xs={12} md={3}>
             <TextField
@@ -124,7 +159,7 @@ export default function EstimatorPanel({
               onChange={(e)=>set({electricCents:+e.target.value})}
             />
             <Box sx={{ display:'flex', alignItems:'center', mt: 0.5 }}>
-              <Tooltip title="Set your utility tier (e.g., Off-peak 12.9–15.4 ¢/kWh, On-Peak)">
+              <Tooltip title="Set your utility tier (e.g., APS off-peak 12.9–15.4 ¢/kWh)">
                 <IconButton size="small" sx={{ ml: -1, color:'text.secondary' }}>
                   <InfoOutlined fontSize="inherit" />
                 </IconButton>
@@ -146,7 +181,6 @@ export default function EstimatorPanel({
             />
           </Grid>
 
-          {/* NEW: Wear & Tear */}
           <Grid item xs={12} md={3}>
             <TextField
               size="small"
@@ -156,6 +190,7 @@ export default function EstimatorPanel({
               InputProps={{ startAdornment: <InputAdornment position="start">$</InputAdornment> }}
               value={value.wearTear}
               onChange={(e)=>set({wearTear: Math.max(0, +e.target.value || 0)})}
+              helperText="Consumables allowance"
             />
           </Grid>
         </Grid>
@@ -168,35 +203,14 @@ function SectionTitle({ children }) {
   return <Typography variant="subtitle1" sx={{ mb: 1, fontWeight: 700 }}>{children}</Typography>;
 }
 
-/** Matches a small TextField footprint so rows align */
 function SliderField({ label, value, onChange, min=0, max=100, step=1 }) {
   return (
-    <Box
-      sx={{
-        border: '1px solid',
-        borderColor: 'divider',
-        borderRadius: 1,
-        px: 1.5,
-        pt: 1,
-        pb: 0.5,
-        minHeight: 56,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-      }}
-    >
-      <Box sx={{ display:'flex', justifyContent:'space-between', mb: 0.5 }}>
+    <Box sx={{ border:'1px solid', borderColor:'divider', borderRadius:1, px:1.5, pt:1, pb:0.5, minHeight:56, display:'flex', flexDirection:'column', justifyContent:'center' }}>
+      <Box sx={{ display:'flex', justifyContent:'space-between', mb:0.5 }}>
         <Typography variant="caption" color="text.secondary">{label}</Typography>
         <Typography variant="caption" color="text.secondary">{Math.round(value)}%</Typography>
       </Box>
-      <Slider
-        size="small"
-        value={value}
-        min={min}
-        max={max}
-        step={step}
-        onChange={(_,v)=>onChange(Array.isArray(v)?v[0]:v)}
-      />
+      <Slider size="small" value={value} min={min} max={max} step={step} onChange={(_,v)=>onChange(Array.isArray(v)?v[0]:v)} />
     </Box>
   );
 }

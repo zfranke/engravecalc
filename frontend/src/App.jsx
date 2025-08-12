@@ -9,6 +9,7 @@ import FilePreview from './components/FilePreview';
 import calc from './features/estimator/calculate';
 import { storage } from './lib/storage';
 
+
 export default function App() {
   const [form, setForm] = useState({
     // Machine
@@ -24,12 +25,17 @@ export default function App() {
     materialUnitType: 'Sheet',
     materialUnitCost: 2.5,
     materialQty: 1,
+    copies: 1,
 
     // Power/Profit
     power: 80,
-    electricCents: 13.5, // ¢/kWh
+    electricCents: 13.5,
     margin: 50,
-    wearTear: 0.25,      // NEW: surfaced in UI
+    wearTear: 0.25,
+
+    // Analysis
+    coverage: 1,
+    lineWidths: null,
   });
 
   const [materialsOpen, setMaterialsOpen] = useState(false);
@@ -45,10 +51,8 @@ export default function App() {
         onOpenPresets={() => setPresetsOpen(true)}
       />
 
-      {/* Center everything with a max width */}
       <Box sx={{ p: 2 }}>
         <Box sx={{ maxWidth: 1200, mx: 'auto' }}>
-          {/* Inputs across the top (full width) */}
           <EstimatorPanel
             value={form}
             onChange={setForm}
@@ -60,18 +64,13 @@ export default function App() {
             }}
           />
 
-          {/* Preview + Output under inputs, centered */}
-          <Grid
-            container
-            spacing={2}
-            sx={{ mt: 2 }}
-            justifyContent="center"
-            alignItems="flex-start"
-          >
+          <Grid container spacing={2} sx={{ mt: 2 }} justifyContent="center" alignItems="flex-start">
             <Grid item xs={12} md={7}>
               <FilePreview
                 dpi={form.dpi}
                 onDimensions={({ w, h }) => setForm((f) => ({ ...f, w, h }))}
+                onCoverage={(c) => setForm((f) => ({ ...f, coverage: c }))}
+                onLineWidths={(arr) => setForm((f) => ({ ...f, lineWidths: arr }))}
               />
             </Grid>
             <Grid item xs={12} md={5}>
